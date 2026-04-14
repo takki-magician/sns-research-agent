@@ -21,6 +21,13 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Install CLI tools
+        run: |
+          pip install agent-reach
+          agent-reach install --env=ci
+          pip install twitter-cli
+          pip install rdt-cli
+
       - name: Create configs directory
         run: mkdir -p configs
 
