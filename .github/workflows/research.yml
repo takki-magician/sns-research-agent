@@ -1,0 +1,46 @@
+name: Daily Research (03:00 JST)
+
+on:
+  schedule:
+    - cron: '0 18 * * *'  # UTC 18:00 = JST 03:00
+  workflow_dispatch:
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Create configs directory
+        run: mkdir -p configs
+
+      - name: Write config from secret
+        run: echo '${{ secrets.HARU_POST_CONFIG }}' > configs/haru-post.json
+
+      - name: Run research agent
+        run: node agent.mjs --config configs/haru-post.json
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Commit and push research report
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          git add output/
+          if git diff --cached --quiet; then
+            echo "⏭️ output/ に変更なし・スキップ"
+          else
+            DATE=$(TZ='Asia/Tokyo' date +%Y-%m-%d)
+            git commit -m "research: ${DATE}"
+            git push
+          fi
