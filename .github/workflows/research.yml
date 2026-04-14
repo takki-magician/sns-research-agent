@@ -24,7 +24,7 @@ jobs:
       - name: Install CLI tools
         run: |
           pip install https://github.com/Panniantong/agent-reach/archive/main.zip
-          agent-reach install --env=ci
+          agent-reach install --env=auto
           pip install twitter-cli
           pip install rdt-cli
 
