@@ -15,7 +15,7 @@ export async function searchX(queries, limit = 20) {
   for (const query of queries) {
     try {
       const { stdout } = await execAsync(
-        `agent-reach twitter search "${query.replace(/"/g, '\\"')}" -n ${limit}`
+        `twitter search "${query.replace(/"/g, '\\"')}" -n ${limit}`
       );
       const parsed = parseXOutput(stdout, query);
       results.push(...parsed);

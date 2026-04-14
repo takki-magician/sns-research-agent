@@ -15,7 +15,7 @@ export async function fetchReddit(subreddits) {
     const sub = raw.replace(/^r\//, "");
     try {
       const { stdout } = await execAsync(
-        `agent-reach reddit "${sub.replace(/"/g, '\\"')}"`
+        `rdt search "." --subreddit "${sub.replace(/"/g, '\\"')}" --json --limit 25`
       );
       const parsed = parseRedditOutput(stdout, sub);
       results.push(...parsed);
@@ -31,8 +31,8 @@ function parseRedditOutput(stdout, sub) {
   const items = [];
   try {
     const json = JSON.parse(stdout);
-    // agent-reach の Reddit 出力形式に対応
-    const children = json?.data?.children ?? json?.children ?? (Array.isArray(json) ? json : []);
+    // rdt --json の出力形式: { ok, data: { kind, data: { children: [...] } } }
+    const children = json?.data?.data?.children ?? json?.data?.children ?? json?.children ?? (Array.isArray(json) ? json : []);
     for (const child of children) {
       const d = child.data ?? child;
       items.push({
