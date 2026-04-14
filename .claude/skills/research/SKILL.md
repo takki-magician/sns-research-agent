@@ -1,3 +1,15 @@
+---
+name: sns-research
+description: SNS・GitHub・RSSを横断するリサーチを実行するスキル。X・note・Reddit・RSS・GitHubから情報収集してレポートを生成する。
+triggers:
+  - リサーチして
+  - 調べて
+  - 競合を調べて
+  - トレンドを調べて
+  - 市場調査して
+  - 情報収集して
+---
+
 # SNSリサーチスキル
 
 ## 概要
