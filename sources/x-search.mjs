@@ -15,7 +15,7 @@ export async function searchX(queries, limit = 20) {
   for (const query of queries) {
     try {
       const { stdout } = await execAsync(
-        `twitter search "${query.replace(/"/g, '\\"')}" -n ${limit}`
+        `twitter search "${query.replace(/"/g, '\\"')}" -n ${limit} --json`
       );
       const parsed = parseXOutput(stdout, query);
       results.push(...parsed);
@@ -30,15 +30,19 @@ export async function searchX(queries, limit = 20) {
 function parseXOutput(stdout, query) {
   const items = [];
   try {
-    // JSON配列として出力される場合
     const json = JSON.parse(stdout);
+    // twitter-cli --json の出力形式: { ok: true, schema_version: "1", data: [...] }
     const arr = Array.isArray(json) ? json : json.data ?? json.results ?? [];
     for (const item of arr) {
+      const screenName = item.author?.screenName ?? "";
+      const id = item.id ?? "";
       items.push({
-        text:     item.text ?? item.full_text ?? "",
-        likes:    item.favorite_count ?? item.likes ?? 0,
-        retweets: item.retweet_count  ?? item.retweets ?? 0,
-        url:      item.url ?? `https://x.com/i/web/status/${item.id ?? ""}`,
+        text:     item.text ?? "",
+        likes:    item.metrics?.likes    ?? 0,
+        retweets: item.metrics?.retweets ?? 0,
+        url:      screenName && id
+                    ? `https://x.com/${screenName}/status/${id}`
+                    : `https://x.com/i/web/status/${id}`,
         query,
       });
     }
