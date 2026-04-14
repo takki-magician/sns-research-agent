@@ -58,7 +58,7 @@ ${sections}
 - 抽象論不要。すぐ動けるレベルの具体性で`;
 
   const res = await client.messages.create({
-    model: "claude-sonnet-4-6",
+    model: "claude-haiku-4-5",
     max_tokens: 4000,
     messages: [{ role: "user", content: prompt }],
   });
