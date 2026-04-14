@@ -36,7 +36,7 @@ jobs:
         run: |
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
-          git add output/
+          git add -f output/
           if git diff --cached --quiet; then
             echo "⏭️ output/ に変更なし・スキップ"
           else
