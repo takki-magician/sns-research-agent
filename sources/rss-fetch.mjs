@@ -1,10 +1,5 @@
-import { exec } from "child_process";
-import { promisify } from "util";
-
-const execAsync = promisify(exec);
-
 /**
- * RSS フィード取得
+ * RSS フィード取得（Node.js native fetch使用・CLIなし）
  * @param {string[]} urls - RSS フィード URL の配列
  * @returns {{ title: string, summary: string, url: string, date: string }[]}
  */
@@ -13,10 +8,13 @@ export async function fetchRSS(urls) {
 
   for (const feedUrl of urls) {
     try {
-      const { stdout } = await execAsync(
-        `agent-reach rss "${feedUrl.replace(/"/g, '\\"')}"`
-      );
-      const parsed = parseRSSOutput(stdout, feedUrl);
+      const res = await fetch(feedUrl, {
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; research-agent/1.0)" },
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const xml = await res.text();
+      const parsed = parseRSSXml(xml, feedUrl);
       results.push(...parsed);
     } catch (err) {
       console.error(`  [rss-fetch] URL "${feedUrl}" 失敗: ${err.message}`);
@@ -26,27 +24,44 @@ export async function fetchRSS(urls) {
   return results;
 }
 
-function parseRSSOutput(stdout, feedUrl) {
+function parseRSSXml(xml, feedUrl) {
   const items = [];
-  try {
-    const json = JSON.parse(stdout);
-    const arr = Array.isArray(json) ? json : json.items ?? json.entries ?? [];
-    for (const item of arr) {
+  const itemPattern = /<(?:item|entry)[^>]*>([\s\S]*?)<\/(?:item|entry)>/g;
+  let m;
+  while ((m = itemPattern.exec(xml)) !== null) {
+    const block = m[1];
+    const title   = getField(block, "title");
+    const link    = getAttrHref(block) || getField(block, "link") || feedUrl;
+    const summary = getField(block, "summary") || getField(block, "description") || "";
+    const date    = getField(block, "pubDate") || getField(block, "published") || getField(block, "updated") || "";
+    if (title) {
       items.push({
-        title:   item.title   ?? "",
-        summary: item.summary ?? item.description ?? item.content ?? "",
-        url:     item.link    ?? item.url ?? feedUrl,
-        date:    item.published ?? item.updated ?? item.pubDate ?? "",
-        source:  feedUrl,
+        title,
+        summary: summary.slice(0, 300),
+        url: link.trim(),
+        date,
+        source: feedUrl,
       });
-    }
-  } catch {
-    for (const line of stdout.split("\n")) {
-      const trimmed = line.trim();
-      if (trimmed.length > 10) {
-        items.push({ title: trimmed, summary: "", url: feedUrl, date: "", source: feedUrl });
-      }
     }
   }
   return items;
+}
+
+function getField(xml, tag) {
+  const m = xml.match(
+    new RegExp(`<${tag}[^>]*>(?:<!\\[CDATA\\[([\\s\\S]*?)\\]\\]>|([\\s\\S]*?))<\\/${tag}>`, "i")
+  );
+  if (!m) return "";
+  return (m[1] ?? m[2] ?? "")
+    .trim()
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+}
+
+function getAttrHref(block) {
+  const m = block.match(/<link[^>]+href="([^"]+)"/i);
+  return m ? m[1] : "";
 }

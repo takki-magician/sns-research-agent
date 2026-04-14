@@ -4,7 +4,7 @@ import { promisify } from "util";
 const execAsync = promisify(exec);
 
 /**
- * GitHub リポジトリ検索
+ * GitHub リポジトリ検索（gh CLI使用）
  * @param {string[]} queries - 検索クエリの配列
  * @returns {{ name: string, description: string, stars: number, url: string }[]}
  */
@@ -14,7 +14,7 @@ export async function searchGitHub(queries) {
   for (const query of queries) {
     try {
       const { stdout } = await execAsync(
-        `agent-reach github search "${query.replace(/"/g, '\\"')}"`
+        `gh search repos "${query.replace(/"/g, '\\"')}" --limit 25 --json name,description,stargazerCount,url`
       );
       const parsed = parseGitHubOutput(stdout, query);
       results.push(...parsed);
@@ -33,10 +33,10 @@ function parseGitHubOutput(stdout, query) {
     const arr = Array.isArray(json) ? json : json.items ?? json.data ?? [];
     for (const item of arr) {
       items.push({
-        name:        item.full_name ?? item.name ?? "",
+        name:        item.name        ?? "",
         description: item.description ?? "",
-        stars:       item.stargazers_count ?? item.stars ?? 0,
-        url:         item.html_url ?? item.url ?? "",
+        stars:       item.stargazerCount ?? item.stars ?? 0,
+        url:         item.url         ?? "",
         query,
       });
     }

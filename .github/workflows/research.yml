@@ -26,7 +26,9 @@ jobs:
           pip install https://github.com/Panniantong/agent-reach/archive/main.zip
           agent-reach install --env=auto
           pip install twitter-cli
-          pip install rdt-cli
+          pipx install rdt-cli
+          pipx ensurepath
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Create configs directory
         run: mkdir -p configs
