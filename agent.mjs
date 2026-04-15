@@ -84,7 +84,7 @@ async function runResearch(config) {
   console.log("\n分析中...");
   const report = await analyze(data, analysis?.focus ?? [], purpose);
 
-  const filename = `research-${today()}-${sanitize(purpose)}.md`;
+  const filename = `research-report-${today()}.md`;
   const outputPath = path.join(OUTPUT_DIR, filename);
   fs.writeFileSync(outputPath, report, "utf-8");
 
