@@ -1,0 +1,33 @@
+{
+  "purpose": "v3型別素材収集",
+  "sources": ["x"],
+  "queries": {
+    "x": [
+      "ADHD 悩み",
+      "adhd 困る",
+      "ADHD しんどい",
+      "ADHD できない",
+      "発達障害 つらい",
+      "ADHD 忘れる",
+      "ADHD あるある",
+      "adhd わかる",
+      "発達障害 あるある",
+      "ADHD 仕事",
+      "adhd 向いてる",
+      "発達障害 活躍",
+      "重度ADHD AI",
+      "adhd claude",
+      "adhd gpt"
+    ]
+  },
+  "analysis": {
+    "focus": [
+      "AIでまだ解決されていないADHD悩みの特定",
+      "あるある・自虐・共感系で共鳴しているテーマ",
+      "ADHD特性が活きている職種・環境の観察事例",
+      "重度ADHD当事者のAI活用実装報告",
+      "競合が未開拓のADHD体験領域"
+    ],
+    "output": "markdown"
+  }
+}
