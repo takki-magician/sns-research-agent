@@ -5,12 +5,13 @@ import path from "path";
 import readline from "readline";
 import { fileURLToPath } from "url";
 
-import { searchX }      from "./sources/x-search.mjs";
-import { searchNote }   from "./sources/note-search.mjs";
-import { searchGitHub } from "./sources/github-search.mjs";
-import { fetchRSS }     from "./sources/rss-fetch.mjs";
-import { fetchReddit }  from "./sources/reddit-fetch.mjs";
-import { analyze }      from "./analyzer.mjs";
+import { searchX }          from "./sources/x-search.mjs";
+import { searchNote }        from "./sources/note-search.mjs";
+import { searchGitHub }      from "./sources/github-search.mjs";
+import { fetchRSS }          from "./sources/rss-fetch.mjs";
+import { fetchReddit }       from "./sources/reddit-fetch.mjs";
+import { fetchOwnArticles }  from "./sources/own-articles-fetch.mjs";
+import { analyze }           from "./analyzer.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUTPUT_DIR  = path.join(__dirname, "output");
@@ -87,6 +88,29 @@ async function runResearch(config) {
   const filename = `research-report-${today()}.md`;
   const outputPath = path.join(OUTPUT_DIR, filename);
   fs.writeFileSync(outputPath, report, "utf-8");
+
+  // 自分のX記事インデックスを更新
+  process.stdout.write("\n[own-articles] haru_adhd_ai のX記事を取得中...");
+  const articlesIndexPath = path.join(OUTPUT_DIR, "x-articles-index.json");
+  try {
+    const freshArticles = await fetchOwnArticles("haru_adhd_ai");
+
+    // 既存インデックスと統合（URLで重複除去）
+    let existing = [];
+    if (fs.existsSync(articlesIndexPath)) {
+      existing = JSON.parse(fs.readFileSync(articlesIndexPath, "utf-8"));
+    }
+    const merged = [...existing];
+    for (const article of freshArticles) {
+      if (!merged.find(a => a.url === article.url)) {
+        merged.push({ ...article, discoveredAt: today() });
+      }
+    }
+    fs.writeFileSync(articlesIndexPath, JSON.stringify(merged, null, 2), "utf-8");
+    console.log(` ✅ ${freshArticles.length}件取得 / 合計${merged.length}件`);
+  } catch (err) {
+    console.log(` ⚠️ スキップ (${err.message})`);
+  }
 
   console.log(`\n✅ 完了 → ${outputPath}`);
   return { report, outputPath };
